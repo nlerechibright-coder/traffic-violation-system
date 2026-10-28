@@ -200,7 +200,7 @@ def management_vehicle_register(request):
         form = VehicleOwnerRegistrationForm()
     return render(request, 'core/form_template.html', {'form': form, 'title': 'Register Vehicle & Owner'})
 
-@management_required
+@role_required(allowed_roles=['MANAGER', 'ADMIN', 'OFFICER'])
 def management_vehicle_detail(request, pk):
     vehicle = get_object_or_404(Vehicle.objects.select_related('owner'), pk=pk)
     sightings = VehicleSighting.objects.filter(vehicle=vehicle).order_by('-sighting_time')

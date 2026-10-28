@@ -58,14 +58,21 @@
                 <div class="row align-items-center">
                     <div class="col-md-3">
                         {% if violation.vehicle.owner.photo %}
-                            <img src="{{ violation.vehicle.owner.photo.url }}" class="img-thumbnail" alt="Owner Photo">
+                            <div class="border rounded bg-light p-2 d-flex align-items-center justify-content-center" style="height: 190px;">
+                                <img src="{{ violation.vehicle.owner.photo.url }}" class="img-fluid rounded" alt="Registered owner: {{ violation.vehicle.owner.full_name }}" style="max-height: 170px; object-fit: contain;">
+                            </div>
                         {% else %}
-                            <div class="text-muted small">No photo uploaded</div>
+                            <div class="border rounded bg-light text-muted small d-flex align-items-center justify-content-center text-center p-3" style="height: 190px;">
+                                No owner photo uploaded
+                            </div>
                         {% endif %}
                     </div>
                     <div class="col-md-9">
                         <p class="mb-1"><strong>Name:</strong> {{ violation.vehicle.owner.full_name }}</p>
                         <p class="mb-1"><strong>Vehicle:</strong> {{ violation.vehicle.registration_number }}</p>
+                        <p class="mb-1"><strong>Make:</strong> {{ violation.vehicle.make|default:"Not provided" }}</p>
+                        <p class="mb-1"><strong>Model:</strong> {{ violation.vehicle.model|default:"Not provided" }}</p>
+                        <p class="mb-1"><strong>Colour:</strong> {{ violation.vehicle.color|default:"Not provided" }}</p>
                         <p class="mb-1"><strong>Email:</strong> {{ violation.vehicle.owner.email|default:"Not provided" }}</p>
                         <p class="mb-1"><strong>Phone:</strong> {{ violation.vehicle.owner.phone|default:"Not provided" }}</p>
                         <p class="mb-1"><strong>Address:</strong> {{ violation.vehicle.owner.address|default:"Not provided" }}</p>

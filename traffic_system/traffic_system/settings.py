@@ -87,6 +87,6 @@ STATIC_ROOT = BASE_DIR / 'staticfiles' # Required for Render to collect static f
 
 # --- MEDIA FILES CONFIGURATION ---
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = Path(os.environ.get('MEDIA_ROOT', BASE_DIR / 'media'))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

@@ -2,7 +2,11 @@
 {% block title %}Vehicle Details{% endblock %}
 {% block content %}
 <div class="mb-4">
+    {% if user.profile.role == 'OFFICER' %}
+    <a href="{% url 'officer_dashboard' %}" class="btn btn-outline-secondary btn-sm">← Back to Dashboard</a>
+    {% else %}
     <a href="{% url 'management_vehicle_list' %}" class="btn btn-outline-secondary btn-sm">← Back to Vehicles</a>
+    {% endif %}
 </div>
 <div class="row">
     <div class="col-md-4">
@@ -21,7 +25,13 @@
             <div class="card-header bg-primary text-white">Owner Information</div>
             <div class="card-body">
                 {% if vehicle.owner.photo %}
-                    <img src="{{ vehicle.owner.photo.url }}" alt="{{ vehicle.owner.full_name }}" class="img-thumbnail mb-3" style="max-width: 180px;">
+                    <div class="border rounded bg-light p-2 mb-3 d-flex align-items-center justify-content-center" style="height: 190px; max-width: 220px;">
+                        <img src="{{ vehicle.owner.photo.url }}" alt="Registered owner: {{ vehicle.owner.full_name }}" class="img-fluid rounded" style="max-height: 170px; object-fit: contain;">
+                    </div>
+                {% else %}
+                    <div class="border rounded bg-light text-muted small mb-3 d-flex align-items-center justify-content-center text-center p-3" style="height: 190px; max-width: 220px;">
+                        No owner photo uploaded
+                    </div>
                 {% endif %}
                 <p><strong>Name:</strong> {{ vehicle.owner.full_name|default:"Unknown" }}</p>
                 <p><strong>Email:</strong> {{ vehicle.owner.email|default:"Not provided" }}</p>
