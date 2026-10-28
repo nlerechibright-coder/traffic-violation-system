@@ -22,7 +22,6 @@ def _match_vehicle_from_filename(filename):
         return matching_vehicle, f"Matched registered vehicle {matching_vehicle.registration_number} from the uploaded filename."
     return None, f"No registered vehicle matched the plate candidate '{plate_candidate}' from the uploaded filename."
 
-# --- Unified Authentication ---
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -57,7 +56,6 @@ def dashboard_view(request):
     else:
         return redirect('officer_dashboard')
 
-# --- Management Views ---
 @management_required
 def management_dashboard(request):
     context = {
@@ -134,7 +132,6 @@ def management_violation_list(request):
     violations = Violation.objects.all().select_related('vehicle', 'camera').order_by('-detected_at')
     search_query = request.GET.get('search', '')
     status_filter = request.GET.get('status', '')
-    
     if search_query:
         violations = violations.filter(
             Q(vehicle__registration_number__icontains=search_query) |
@@ -142,7 +139,6 @@ def management_violation_list(request):
         )
     if status_filter:
         violations = violations.filter(status=status_filter)
-        
     return render(request, 'core/management_violation_list.html', {
         'violations': violations, 'search_query': search_query, 'status_filter': status_filter
     })
@@ -158,11 +154,9 @@ def management_violation_detail(request, pk):
             return redirect('management_violation_list')
     else:
         form = ViolationManagementForm(instance=violation)
-        
     latest_sighting = None
     if violation.vehicle:
         latest_sighting = VehicleSighting.objects.filter(vehicle=violation.vehicle).first()
-        
     return render(request, 'core/management_violation_detail.html', {
         'violation': violation, 'form': form, 'latest_sighting': latest_sighting
     })
@@ -180,13 +174,12 @@ def management_vehicle_register(request):
     if request.method == 'POST':
         form = VehicleOwnerRegistrationForm(request.POST, request.FILES)
         if form.is_valid():
+            # 1. Create Owner with Photo
             owner = Owner.objects.create(
                 full_name=form.cleaned_data['full_name'],
-                photo=form.cleaned_data.get('photo'),
-                email=form.cleaned_data.get('email'),
-                phone=form.cleaned_data.get('phone'),
-                address=form.cleaned_data.get('address'),
+                photo=form.cleaned_data.get('owner_photo'),
             )
+            # 2. Create Vehicle
             vehicle = Vehicle.objects.create(
                 owner=owner,
                 registration_number=form.cleaned_data['registration_number'].upper(),
@@ -194,13 +187,17 @@ def management_vehicle_register(request):
                 model=form.cleaned_data.get('model') or '',
                 color=form.cleaned_data.get('color') or '',
             )
-            messages.success(request, f"Vehicle {vehicle.registration_number} was registered successfully.")
+            # Note: If your Vehicle model has a 'plate_image' field, you can add it here:
+            # vehicle.plate_image = form.cleaned_data.get('vehicle_plate_image')
+            # vehicle.save()
+            
+            messages.success(request, f"Vehicle {vehicle.registration_number} and owner registered successfully.")
             return redirect('management_vehicle_list')
     else:
         form = VehicleOwnerRegistrationForm()
     return render(request, 'core/form_template.html', {'form': form, 'title': 'Register Vehicle & Owner'})
 
-@role_required(allowed_roles=['MANAGER', 'ADMIN', 'OFFICER'])
+@management_required
 def management_vehicle_detail(request, pk):
     vehicle = get_object_or_404(Vehicle.objects.select_related('owner'), pk=pk)
     sightings = VehicleSighting.objects.filter(vehicle=vehicle).order_by('-sighting_time')
@@ -209,7 +206,6 @@ def management_vehicle_detail(request, pk):
         'vehicle': vehicle, 'sightings': sightings, 'violations': violations
     })
 
-# --- Admin Views ---
 @role_required(allowed_roles=['ADMIN'])
 def admin_dashboard(request):
     context = {
@@ -246,7 +242,6 @@ def officer_create(request):
             return redirect('admin_dashboard')
     return render(request, 'core/form_template.html', {'form': OfficerCreationForm(), 'title': 'Create Traffic Officer Account'})
 
-# --- Officer Views ---
 @role_required(allowed_roles=['OFFICER'])
 def officer_dashboard(request):
     pending = Violation.objects.filter(status='PENDING').order_by('-detected_at')
@@ -256,19 +251,16 @@ def officer_dashboard(request):
 def violation_create(request):
     form = ViolationForm()
     ocr_message = None
-    
     if request.method == 'POST':
         form = ViolationForm(request.POST, request.FILES)
         if form.is_valid():
             violation = form.save(commit=False)
-            
             if form.cleaned_data.get('vehicle'):
                 violation.vehicle = form.cleaned_data['vehicle']
             elif form.cleaned_data.get('manual_plate'):
                 plate = normalize_plate_number(form.cleaned_data['manual_plate'])
                 if plate:
                     violation.vehicle, _ = Vehicle.objects.get_or_create(registration_number=plate.upper())
-            
             uploaded_file = request.FILES.get('evidence')
             if uploaded_file:
                 matched_vehicle, match_message = _match_vehicle_from_filename(uploaded_file.name)
@@ -278,19 +270,15 @@ def violation_create(request):
                     ocr_message = f"Auto-matched: {match_message}"
                 else:
                     ocr_message = f"Note: {match_message}. Please verify the plate manually."
-            
             violation.save()
-            
             if violation.vehicle:
                 VehicleSighting.objects.create(
                     vehicle=violation.vehicle,
                     camera=violation.camera,
                     sighting_time=violation.detected_at
                 )
-            
             messages.success(request, 'Violation reported and saved successfully.')
             return redirect('officer_dashboard')
-            
     return render(request, 'core/violation_form.html', {'form': form, 'ocr_message': ocr_message})
 
 @role_required(allowed_roles=['OFFICER', 'ADMIN'])
