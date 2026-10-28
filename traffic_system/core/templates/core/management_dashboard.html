@@ -1,0 +1,65 @@
+{% extends 'core/base.html' %}
+{% block title %}Management Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">System Management Dashboard</h2>
+    <span class="badge bg-dark p-2">Manager Access</span>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+            <div class="card-body">
+                <h6 class="mb-0">Total Cameras</h6>
+                <h2 class="fw-bold mb-0">{{ total_cameras }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 bg-success text-white">
+            <div class="card-body">
+                <h6 class="mb-0">Registered Vehicles</h6>
+                <h2 class="fw-bold mb-0">{{ total_vehicles }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 bg-warning text-dark">
+            <div class="card-body">
+                <h6 class="mb-0">Pending Reviews</h6>
+                <h2 class="fw-bold mb-0">{{ pending_violations }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 bg-info text-white">
+            <div class="card-body">
+                <h6 class="mb-0">Active Officers</h6>
+                <h2 class="fw-bold mb-0">{{ total_officers }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-bold">Infrastructure & Personnel</div>
+            <div class="card-body">
+                <a href="{% url 'management_camera_list' %}" class="btn btn-outline-primary w-100 mb-2">Manage Traffic Cameras</a>
+                <a href="{% url 'management_officer_list' %}" class="btn btn-outline-success w-100">Manage Traffic Officers</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-bold">Records & Evidence</div>
+            <div class="card-body">
+                <a href="{% url 'management_violation_list' %}" class="btn btn-outline-warning w-100 mb-2">Review Violation Records</a>
+                <a href="{% url 'management_vehicle_list' %}" class="btn btn-outline-info w-100 mb-2">View Vehicle Sightings</a>
+                <a href="{% url 'management_vehicle_register' %}" class="btn btn-outline-dark w-100">Register Vehicle & Owner</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

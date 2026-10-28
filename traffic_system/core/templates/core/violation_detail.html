@@ -1,0 +1,102 @@
+{% extends 'core/base.html' %}
+{% block title %}Violation Review{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-dark text-white">Evidence</div>
+            <div class="card-body text-center">
+                {% if violation.evidence %}
+                    <img src="{{ violation.evidence.url }}" class="img-fluid rounded" alt="Violation Evidence">
+                {% else %}
+                    <p class="text-muted">No image uploaded.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-dark text-white">Case Details</div>
+            <div class="card-body">
+                <p><strong>Verified Plate:</strong> {{ violation.get_plate }}</p>
+                <p><strong>Violation Type:</strong> {{ violation.get_violation_type_display }}</p>
+                <p><strong>Camera:</strong> {{ violation.camera.name }} ({{ violation.camera.location }})</p>
+                <p><strong>Date/Time:</strong> {{ violation.detected_at|date:"M d, Y H:i" }}</p>
+                <p><strong>Description:</strong> {{ violation.description|default:"None" }}</p>
+                
+                <hr>
+                <h6 class="text-muted">System Processing Data (Technical Honesty)</h6>
+                <p class="small mb-1"><strong>OCR Attempt:</strong> 
+                    {% if violation.ocr_status == 'SUCCESS' %}
+                        <span class="text-success">{{ violation.ocr_plate }} (Confidence: {{ violation.ocr_confidence|floatformat:2 }})</span>
+                    {% elif violation.ocr_status == 'FAILED' %}
+                        <span class="text-danger">Failed to read plate</span>
+                    {% else %}
+                        <span class="text-secondary">Not run</span>
+                    {% endif %}
+                </p>
+                {% if latest_sighting %}
+                <p class="small mb-0"><strong>Latest Recorded Sighting:</strong> {{ latest_sighting.camera.name }} on {{ latest_sighting.sighting_time|date:"M d, Y H:i" }}</p>
+                {% endif %}
+
+                <hr>
+                <p><strong>Current Status:</strong> 
+                    <span class="badge 
+                        {% if violation.status == 'PENDING' %}bg-warning text-dark
+                        {% elif violation.status == 'CONFIRMED' %}bg-success
+                        {% else %}bg-danger{% endif %}">
+                        {{ violation.get_status_display }}
+                    </span>
+                </p>
+            </div>
+        </div>
+
+        {% if violation.vehicle and violation.vehicle.owner %}
+        <div class="card border-info mt-3">
+            <div class="card-header bg-info text-white">Matched Vehicle Owner</div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        {% if violation.vehicle.owner.photo %}
+                            <img src="{{ violation.vehicle.owner.photo.url }}" class="img-thumbnail" alt="Owner Photo">
+                        {% else %}
+                            <div class="text-muted small">No photo uploaded</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-9">
+                        <p class="mb-1"><strong>Name:</strong> {{ violation.vehicle.owner.full_name }}</p>
+                        <p class="mb-1"><strong>Vehicle:</strong> {{ violation.vehicle.registration_number }}</p>
+                        <p class="mb-1"><strong>Email:</strong> {{ violation.vehicle.owner.email|default:"Not provided" }}</p>
+                        <p class="mb-1"><strong>Phone:</strong> {{ violation.vehicle.owner.phone|default:"Not provided" }}</p>
+                        <p class="mb-1"><strong>Address:</strong> {{ violation.vehicle.owner.address|default:"Not provided" }}</p>
+                        <a href="{% url 'management_vehicle_detail' violation.vehicle.pk %}" class="btn btn-sm btn-outline-primary mt-2">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if violation.status == 'PENDING' %}
+        <div class="card border-warning mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Officer Review</h5>
+                <p class="card-text">Examine the evidence and update the case status.</p>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" name="action" value="CONFIRM" class="btn btn-success">Confirm Violation</button>
+                        <button type="submit" name="action" value="REJECT" class="btn btn-danger">Reject Case</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-secondary mt-3">
+            This case has already been reviewed and is no longer pending.
+        </div>
+        {% endif %}
+        
+        <a href="{% url 'officer_dashboard' %}" class="btn btn-outline-secondary mt-3">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

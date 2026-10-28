@@ -1,0 +1,28 @@
+{% extends 'core/base.html' %}
+{% block title %}Manage Officers{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Traffic Officers</h3>
+    <a href="{% url 'management_officer_create' %}" class="btn btn-success">+ Create Officer</a>
+</div>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-hover">
+            <thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+                {% for officer in officers %}
+                <tr>
+                    <td>{{ officer.username }}</td>
+                    <td>{{ officer.first_name }} {{ officer.last_name }}</td>
+                    <td>{{ officer.email }}</td>
+                    <td><span class="badge {% if officer.is_active %}bg-success{% else %}bg-danger{% endif %}">{% if officer.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                    <td><a href="{% url 'management_officer_edit' officer.pk %}" class="btn btn-sm btn-outline-primary">Edit</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-muted">No officers registered.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'core/base.html' %}
+{% block title %}Officer Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Traffic Officer Dashboard</h2>
+    <a href="{% url 'violation_create' %}" class="btn btn-warning text-dark fw-bold">+ Report New Violation</a>
+</div>
+
+<div class="card">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">Pending Violations ({{ total_pending }})</h5>
+    </div>
+    <div class="card-body">
+        {% if pending_violations %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Plate Number</th>
+                            <th>Violation Type</th>
+                            <th>Camera</th>
+                            <th>Date/Time</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for violation in pending_violations %}
+                        <tr>
+                            <td>{{ violation.get_plate }}</td>
+                            <td>{{ violation.get_violation_type_display }}</td>
+                            <td>{{ violation.camera.name }}</td>
+                            <td>{{ violation.detected_at|date:"M d, Y H:i" }}</td>
+                            <td><a href="{% url 'violation_detail' violation.pk %}" class="btn btn-sm btn-outline-primary">Review</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">No pending violations at this time. Great job!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

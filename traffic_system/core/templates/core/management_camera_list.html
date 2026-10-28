@@ -1,0 +1,32 @@
+{% extends 'core/base.html' %}
+{% block title %}Manage Cameras{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Traffic Cameras</h3>
+    <a href="{% url 'management_camera_create' %}" class="btn btn-primary">+ Add New Camera</a>
+</div>
+<div class="card shadow-sm">
+    <div class="card-body">
+        {% if cameras %}
+        <table class="table table-hover">
+            <thead><tr><th>Name</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+                {% for camera in cameras %}
+                <tr>
+                    <td>{{ camera.name }}</td>
+                    <td>{{ camera.location }}</td>
+                    <td><span class="badge {% if camera.is_active %}bg-success{% else %}bg-secondary{% endif %}">{% if camera.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                    <td><a href="{% url 'management_camera_edit' camera.pk %}" class="btn btn-sm btn-outline-primary">Edit</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <div class="text-center py-4">
+                <p class="text-muted mb-3">No cameras have been registered in the system yet.</p>
+                <a href="{% url 'management_camera_create' %}" class="btn btn-primary">Register Your First Camera</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
