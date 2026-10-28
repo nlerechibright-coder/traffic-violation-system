@@ -13,15 +13,16 @@ from .utils import normalize_plate_number, extract_plate_from_filename
 
 def _match_vehicle_from_filename(filename):
     if not filename:
-        return None, "No filename provided."
+        return None, "The uploaded filename does not contain a usable plate identifier."
     plate_candidate = extract_plate_from_filename(filename)
     if not plate_candidate:
-        return None, "Filename does not contain a recognizable plate number."
+        return None, "The uploaded filename does not contain a usable plate identifier for a vehicle lookup."
     matching_vehicle = Vehicle.objects.filter(registration_number__iexact=plate_candidate).first()
     if matching_vehicle:
-        return matching_vehicle, f"Auto-matched vehicle {matching_vehicle.registration_number} from filename."
-    return None, f"No vehicle found matching '{plate_candidate}' from filename."
+        return matching_vehicle, f"Matched registered vehicle {matching_vehicle.registration_number} from the uploaded filename."
+    return None, f"No registered vehicle matched the plate candidate '{plate_candidate}' from the uploaded filename."
 
+# --- Unified Authentication ---
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -56,6 +57,7 @@ def dashboard_view(request):
     else:
         return redirect('officer_dashboard')
 
+# --- Management Views ---
 @management_required
 def management_dashboard(request):
     context = {
@@ -132,6 +134,7 @@ def management_violation_list(request):
     violations = Violation.objects.all().select_related('vehicle', 'camera').order_by('-detected_at')
     search_query = request.GET.get('search', '')
     status_filter = request.GET.get('status', '')
+    
     if search_query:
         violations = violations.filter(
             Q(vehicle__registration_number__icontains=search_query) |
@@ -139,6 +142,7 @@ def management_violation_list(request):
         )
     if status_filter:
         violations = violations.filter(status=status_filter)
+        
     return render(request, 'core/management_violation_list.html', {
         'violations': violations, 'search_query': search_query, 'status_filter': status_filter
     })
@@ -154,9 +158,11 @@ def management_violation_detail(request, pk):
             return redirect('management_violation_list')
     else:
         form = ViolationManagementForm(instance=violation)
+        
     latest_sighting = None
     if violation.vehicle:
         latest_sighting = VehicleSighting.objects.filter(vehicle=violation.vehicle).first()
+        
     return render(request, 'core/management_violation_detail.html', {
         'violation': violation, 'form': form, 'latest_sighting': latest_sighting
     })
@@ -203,6 +209,7 @@ def management_vehicle_detail(request, pk):
         'vehicle': vehicle, 'sightings': sightings, 'violations': violations
     })
 
+# --- Admin Views ---
 @role_required(allowed_roles=['ADMIN'])
 def admin_dashboard(request):
     context = {
@@ -239,6 +246,7 @@ def officer_create(request):
             return redirect('admin_dashboard')
     return render(request, 'core/form_template.html', {'form': OfficerCreationForm(), 'title': 'Create Traffic Officer Account'})
 
+# --- Officer Views ---
 @role_required(allowed_roles=['OFFICER'])
 def officer_dashboard(request):
     pending = Violation.objects.filter(status='PENDING').order_by('-detected_at')
@@ -261,7 +269,6 @@ def violation_create(request):
                 if plate:
                     violation.vehicle, _ = Vehicle.objects.get_or_create(registration_number=plate.upper())
             
-            # FILENAME MATCHING ONLY (NO OCR TO PREVENT CRASHES)
             uploaded_file = request.FILES.get('evidence')
             if uploaded_file:
                 matched_vehicle, match_message = _match_vehicle_from_filename(uploaded_file.name)
